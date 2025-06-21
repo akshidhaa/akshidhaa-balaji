@@ -1,0 +1,24 @@
+const cutoff = new Date();
+cutoff.setHours(9, 0, 0);  // 9:00 AM cutoff
+
+return items.map(item => {
+  const name = item.json["Name"];
+  const timeStr = item.json["Check-in Time"];
+  let status = "Absent";
+
+  if (timeStr && timeStr.trim() !== "--") {
+    const [h, m] = timeStr.split(":").map(Number);
+    const checkIn = new Date();
+    checkIn.setHours(h, m, 0);
+
+    status = checkIn <= cutoff ? "On Time" : "Late";
+  }
+
+  return {
+    json: {
+      Name: name,
+      "Check-in Time": timeStr,
+      Status: status
+    }
+  };
+});
