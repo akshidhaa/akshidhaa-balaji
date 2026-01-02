@@ -1,0 +1,204 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(const TodoApp());
+}
+
+class TodoApp extends StatelessWidget {
+  const TodoApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'To-Do List Assistant',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const WelcomePage(),
+    );
+  }
+}
+
+// ---------------- PAGE 1 ----------------
+class WelcomePage extends StatelessWidget {
+  const WelcomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue, Colors.purple],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.task_alt, size: 100, color: Colors.white),
+              const SizedBox(height: 20),
+              const Text("To-Do List Assistant",
+                  style: TextStyle(fontSize: 28, color: Colors.white)),
+              const SizedBox(height: 40),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => const BenefitsPage()));
+                },
+                child: const Text("Get Started"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------- PAGE 2 ----------------
+class BenefitsPage extends StatelessWidget {
+  const BenefitsPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Benefits")),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: const [
+            Text("Why use this To-Do List?",
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 20),
+            Text("• Organize tasks\n• Reduce stress\n• Get reminders\n• Boost productivity",
+                style: TextStyle(fontSize: 18)),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.arrow_forward),
+        onPressed: () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const AddTaskPage()));
+        },
+      ),
+    );
+  }
+}
+
+// ---------------- PAGE 3 ----------------
+class AddTaskPage extends StatefulWidget {
+  const AddTaskPage({super.key});
+
+  @override
+  State<AddTaskPage> createState() => _AddTaskPageState();
+}
+
+class _AddTaskPageState extends State<AddTaskPage> {
+  final TextEditingController controller = TextEditingController();
+  DateTime? deadline;
+  String priority = "Medium";
+  String category = "General";
+  final List<Map<String, dynamic>> tasks = [];
+
+  String greetingMessage() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good Morning!";
+    if (hour < 18) return "Good Afternoon!";
+    return "Good Evening!";
+  }
+
+  void addTask() {
+    if (controller.text.isNotEmpty) {
+      tasks.add({
+        "title": controller.text,
+        "deadline": deadline,
+        "priority": priority,
+        "category": category,
+      });
+      controller.clear();
+      deadline = null;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => ViewTasksPage(tasks: tasks)),
+      );
+    }
+  }
+
+  Future<void> pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) setState(() => deadline = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(greetingMessage())),
+      body: Column(
+        children: [
+          TextField(
+            controller: controller,
+            decoration: const InputDecoration(labelText: "Enter task"),
+          ),
+          ElevatedButton.icon(
+            onPressed: pickDate,
+            icon: const Icon(Icons.calendar_today),
+            label: Text(
+              deadline == null
+                  ? "Pick Deadline"
+                  : "Deadline: ${deadline!.day}/${deadline!.month}/${deadline!.year}",
+            ),
+          ),
+          DropdownButton<String>(
+            value: priority,
+            items: ["High", "Medium", "Low"].map((e) =>
+                DropdownMenuItem(value: e, child: Text("Priority: $e"))).toList(),
+            onChanged: (val) => setState(() => priority = val!),
+          ),
+          DropdownButton<String>(
+            value: category,
+            items: ["General", "Work", "Personal", "Study"].map((e) =>
+                DropdownMenuItem(value: e, child: Text("Category: $e"))).toList(),
+            onChanged: (val) => setState(() => category = val!),
+          ),
+          ElevatedButton(onPressed: addTask, child: const Text("Add Task")),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------- PAGE 4 ----------------
+class ViewTasksPage extends StatelessWidget {
+  final List<Map<String, dynamic>> tasks;
+  const ViewTasksPage({super.key, required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Your Tasks")),
+      body: ListView.builder(
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          return Card(
+            child: ListTile(
+              title: Text(task["title"]),
+              subtitle: Text(
+                  "Priority: ${task["priority"]} | Category: ${task["category"]}"
+                  + (task["deadline"] != null
+                      ? " | Deadline: ${task["deadline"].day}/${task["deadline"].month}/${task["deadline"].year}"
+                      : "")),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
